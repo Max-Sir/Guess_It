@@ -16,12 +16,17 @@
 
 package com.example.android.guesstheword.screens.game
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -37,9 +42,9 @@ class GameFragment : Fragment() {
     private lateinit var viewModel: GameViewModel
 
 
-
     private lateinit var binding: GameFragmentBinding
 
+    @SuppressLint("FragmentLiveDataObserve")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -57,46 +62,44 @@ class GameFragment : Fragment() {
 
 
 
-        binding.correctButton.setOnClickListener { onCorrect() }
-        binding.skipButton.setOnClickListener { onSkip() }
-        updateScoreText()
-        updateWordText()
+        binding.correctButton.setOnClickListener {
+            viewModel.onCorrect()
+            Log.i("Hello", "World!!!")
+        }
+        binding.skipButton.setOnClickListener {
+            viewModel.onSkip()
+
+        }
+
+        viewModel.score.observe(this, { newScore ->
+            binding.scoreText.text = viewModel.score.value?.toString()
+        })
+
+        viewModel.word.observe(this, { newWord ->
+            binding.wordText.text = viewModel.word.value ?: ""
+        })
+
+        viewModel.eventGameFinished.observe(this, Observer { isFinished->
+            if(isFinished){
+                gameFinished()
+                viewModel.onGameFinishedComleted()
+            }
+        })
+
+
         return binding.root
 
     }
-
 
 
     /**
      * Called when the game is finished
      */
     private fun gameFinished() {
-        val action = GameFragmentDirections.actionGameToScore(score)
+        val action = GameFragmentDirections.actionGameToScore(viewModel.score.value ?: 0)
         findNavController(this).navigate(action)
+        Toast.makeText(context,"You finished this game with score ${viewModel.score.value} of ${viewModel.wordList.size}",Toast.LENGTH_LONG).show()
     }
 
 
-
-    /** Methods for buttons presses **/
-
-    private fun onSkip() {
-        score--
-        nextWord()
-    }
-
-    private fun onCorrect() {
-        score++
-        nextWord()
-    }
-
-    /** Methods for updating the UI **/
-
-    private fun updateWordText() {
-        binding.wordText.text = word
-
-    }
-
-    private fun updateScoreText() {
-        binding.scoreText.text = score.toString()
-    }
 }
