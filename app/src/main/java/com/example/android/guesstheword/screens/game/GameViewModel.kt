@@ -1,5 +1,7 @@
 package com.example.android.guesstheword.screens.game
 
+import android.os.CountDownTimer
+import android.text.format.DateUtils
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -12,10 +14,17 @@ class GameViewModel : ViewModel() {
         // This is when the game is over
         const val DONE = 0L
         // This is the number of milliseconds in a second
-        const val ONE_SECOND = 1000L
+        const val ONE_SECOND = 1_000L
         // This is the total time of the game
-        const val COUNTDOWN_TIME = 60000L
+        const val COUNTDOWN_TIME = 10_000L//60_000L
     }
+
+
+    private val timer:CountDownTimer
+
+    private val _curTime= MutableLiveData<Long>()
+    val curTime:LiveData<Long>
+        get() = _curTime
 
     // The current word
     private val _word = MutableLiveData<String>()
@@ -39,12 +48,22 @@ class GameViewModel : ViewModel() {
         get() = _word
 
     init {
-        _eventGameFinished.value = false
-        //Log.d("GameViewModel","init")
         resetList()
         nextWord()
         _score.value = 0
-        //_word.value=""
+
+        timer= object : CountDownTimer(COUNTDOWN_TIME, ONE_SECOND){
+            override fun onTick(millisToFinish: Long) {
+                _curTime.value = (millisToFinish / ONE_SECOND)
+            }
+
+            override fun onFinish() {
+                _curTime.value=DONE
+                _eventGameFinished.value=true
+            }
+
+        }
+        timer.start()
     }
 
     /**
@@ -57,6 +76,7 @@ class GameViewModel : ViewModel() {
         //    _eventGameFinished.value=true
         }
             _word.value = wordList.removeAt(0)
+
 
     }
 
@@ -104,7 +124,8 @@ class GameViewModel : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        Log.d("GameViewModel", "destroyed")
+        //Log.d("GameViewModel", "destroyed")
+        timer.cancel()
     }
 
     fun onGameFinishedComleted(){
