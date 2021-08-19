@@ -14,4 +14,17 @@ class ScoreViewModel(score: Int) : ViewModel() {
     val eventOnPlayAgain:LiveData<Boolean>
     get()= _eventOnPlayAgain
 
+    init {
+        _curScore.value=score
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+    }
+    fun onPlayAgainPressed(){
+        _eventOnPlayAgain.value=true
+    }
+    fun onPlayAgainReleased(){
+        _eventOnPlayAgain.value=false
+    }
 }
